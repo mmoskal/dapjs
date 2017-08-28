@@ -4,3 +4,4 @@ typings
 *.ts.new
 *.tgz
 built/
+bin/
