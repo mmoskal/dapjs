@@ -326,8 +326,10 @@ export class CortexM {
 
             if (timeout > 0) {
                 setTimeout(() => {
-                    reject("waitForHalt timed out.");
-                    running = false;
+                    if (running) {
+                        reject("waitForHalt timed out.");
+                        running = false;
+                    }
                 }, timeout);
             }
 
@@ -336,6 +338,7 @@ export class CortexM {
             }
 
             if (running) {
+                running = false;
                 resolve();
             }
         });
