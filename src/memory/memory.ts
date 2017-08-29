@@ -190,8 +190,8 @@ export class Memory {
 
     private async readBlockCore(addr: number, words: number) {
         // do not use PrepareCommand here - it seems it needs a delay between CSW and TAR
-        this.dev.writeAp(ApReg.CSW, Csw.CSW_VALUE | Csw.CSW_SIZE32);
-        this.dev.writeAp(ApReg.TAR, addr);
+        await this.dev.writeAp(ApReg.CSW, Csw.CSW_VALUE | Csw.CSW_SIZE32);
+        await this.dev.writeAp(ApReg.TAR, addr);
 
         let lastSize = words % 15;
         if (lastSize === 0) {
@@ -213,17 +213,11 @@ export class Memory {
 
     private async writeBlockCore(addr: number, words: Uint32Array): Promise<void> {
         try {
-            const blSz = 14;
-            const reg = apReg(ApReg.DRW, DapVal.WRITE);
+            await this.dev.writeAp(ApReg.CSW, Csw.CSW_VALUE | Csw.CSW_SIZE32);
+            await this.dev.writeAp(ApReg.TAR, addr);
 
             const prep = this.dev.prepareCommand();
-            prep.writeAp(ApReg.CSW, Csw.CSW_VALUE | Csw.CSW_SIZE32);
-            prep.writeAp(ApReg.TAR, addr);
-
-            for (let i = 0; i < Math.ceil(words.length / blSz); i++) {
-                prep.writeRegRepeat(reg, words.subarray(i * blSz, i * blSz + blSz));
-            }
-
+            prep.writeRegRepeat(apReg(ApReg.DRW, DapVal.WRITE), words)
             await prep.go();
         } catch (e) {
             if (e.dapWait) {
