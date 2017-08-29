@@ -1,10 +1,10 @@
 import DAP from "../dap/dap";
 
-import {ApReg, Csw,  DapVal} from "../dap/constants";
-import {PreparedDapCommand} from "../dap/prepared";
-import {apReg, assert, bufferConcat, delay} from "../util";
+import { ApReg, Csw, DapVal } from "../dap/constants";
+import { PreparedDapCommand } from "../dap/prepared";
+import { apReg, assert, bufferConcat, delay } from "../util";
 
-import {PreparedMemoryCommand} from "./prepared";
+import { PreparedMemoryCommand } from "./prepared";
 
 /**
  * # Memory Interface
@@ -189,10 +189,9 @@ export class Memory {
     }
 
     private async readBlockCore(addr: number, words: number) {
-        const prep = this.dev.prepareCommand();
-        prep.writeAp(ApReg.CSW, Csw.CSW_VALUE | Csw.CSW_SIZE32);
-        prep.writeAp(ApReg.TAR, addr);
-        await prep.go();
+        // do not use PrepareCommand here - it seems it needs a delay between CSW and TAR
+        this.dev.writeAp(ApReg.CSW, Csw.CSW_VALUE | Csw.CSW_SIZE32);
+        this.dev.writeAp(ApReg.TAR, addr);
 
         let lastSize = words % 15;
         if (lastSize === 0) {
