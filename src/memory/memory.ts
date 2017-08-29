@@ -213,10 +213,9 @@ export class Memory {
 
     private async writeBlockCore(addr: number, words: Uint32Array): Promise<void> {
         try {
-            await this.dev.writeAp(ApReg.CSW, Csw.CSW_VALUE | Csw.CSW_SIZE32);
-            await this.dev.writeAp(ApReg.TAR, addr);
-
             const prep = this.dev.prepareCommand();
+            prep.writeAp(ApReg.CSW, Csw.CSW_VALUE | Csw.CSW_SIZE32);
+            prep.writeAp(ApReg.TAR, addr);
             prep.writeRegRepeat(apReg(ApReg.DRW, DapVal.WRITE), words)
             await prep.go();
         } catch (e) {
