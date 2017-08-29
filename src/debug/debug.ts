@@ -45,7 +45,7 @@ export class Debug {
     }
 
     public async init() {
-        this.setupFpb();
+        await this.setupFpb();
     }
 
     /**
