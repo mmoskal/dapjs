@@ -125,9 +125,12 @@ export class PreparedDapCommand {
         for (let i = 0; i < this.commands.length; i++) {
             const command = this.commands[i];
             command[1] = this.commandCounts[i];
+        }
 
-            const result = await this.dap.cmdNums(DapCmd.DAP_TRANSFER, command);
+        const results = await this.dap.sendTransfers(this.commands)
 
+        for (let i = 0; i < this.commands.length; i++) {
+            const result = results[i]
             for (let j = 0; j < this.readCounts[i]; j++) {
                 v.push(readUInt32LE(result, 3 + 4 * j));
             }

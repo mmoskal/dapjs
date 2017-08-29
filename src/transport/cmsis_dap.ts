@@ -1,5 +1,5 @@
-import {addInt32} from "../util";
-import {IHID} from "./hid";
+import { addInt32 } from "../util";
+import { IHID } from "./hid";
 
 export const enum DapCmd {
     DAP_INFO = 0x00,
@@ -50,6 +50,26 @@ export class CMSISDAP {
     public async disconnect() {
         return this.cmdNums(DapCmd.DAP_DISCONNECT, []);
     }
+
+    public async sendTransfers(commands: number[][]): Promise<Uint8Array[]> {
+        if (this.hid.sendMany)
+            return this.hid.sendMany(commands.map(cmd => {
+                cmd.unshift(DapCmd.DAP_TRANSFER)
+                return Uint8Array.from(cmd)
+            })).then(bufs => {
+                for (let buf of bufs)
+                    if (buf[0] != DapCmd.DAP_TRANSFER)
+                        throw new Error(`Bad response for Transfer (many) -> ${buf[0]}`);
+                return bufs
+            })
+
+        let res: Uint8Array[] = []
+        for (const cmd of commands) {
+            res.push(await this.cmdNums(DapCmd.DAP_TRANSFER, cmd))
+        }
+        return res
+    }
+
 
     public async cmdNums(op: DapCmd, data: number[]) {
         data.unshift(op);
