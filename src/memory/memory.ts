@@ -141,7 +141,6 @@ export class Memory {
      * @param pageSize Memory page size
      */
     public async readBlock(addr: number, words: number, pageSize: number) {
-        const funs = [async () => Promise.resolve()];
         const bufs: Uint8Array[] = [];
         const end = addr + words * 4;
         let ptr = addr;
@@ -151,22 +150,13 @@ export class Memory {
             if (ptr === addr) {
                 nextptr &= ~(pageSize - 1);
             }
-
             const len = Math.min(nextptr - ptr, end - ptr);
-            const ptr0 = ptr;
             assert((len & 3) === 0);
-            funs.push(async () => {
-                bufs.push(await this.readBlockCore(ptr0, len >> 2));
-            });
-
+            bufs.push(await this.readBlockCore(ptr, len >> 2));
             ptr = nextptr;
         }
 
-        for (const f of funs) {
-            await f();
-        }
-
-        const result = await bufferConcat(bufs);
+        const result = bufferConcat(bufs);
         return result.subarray(0, words * 4);
     }
 
@@ -209,7 +199,7 @@ export class Memory {
             blocks.push(b);
         }
 
-        return bufferConcat(blocks);
+        return bufferConcat(blocks).subarray(0, words * 4);
     }
 
     private async writeBlockCore(addr: number, words: Uint32Array): Promise<void> {
